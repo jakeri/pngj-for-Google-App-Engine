@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="pngj" default="makejar" basedir=".">
+	<property file="build.properties"/>
+<buildnumber file="build.num"/>
+<tstamp>
+ <format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
+</tstamp>
+
+
+<target name ="makejar2" description="Create a jar for the HW project">
+      
+ <jar jarfile="../dist/pngj.jar" includes="**/*.class" />
+         
+</target>
+	
+<target name="compile" depends="">
+</target>     
+<target name="makejar" depends="compile">
+	 <delete file="${distdir}/pngj.jar"/>
+	 <delete file="${distdir}/MANIFEST.MF"/>
+	 <property name="version.num" value="0.10"/>
+	 <buildnumber file="build.num"/>
+	     
+	     <manifest file="MANIFEST.MF">
+	        <attribute name="Built-By" value="Hernan J. Gonzalez - hgonzalez@gmail.com"/>
+	        <attribute name="Implementation-Version" 
+	                     value="${version.num}-b${build.number}"/>
+	     	<attribute name="Built-Date" value="${TODAY}"/> 
+	     </manifest>
+	  
+	      <jar destfile="${distdir}/pngj.jar"
+	      	   basedir="../bin/"
+	           includes="**/*.class"
+	           manifest="MANIFEST.MF"
+	           />
+	  </target>
+	  
+
+	
+</project>
