@@ -1,30 +1,69 @@
 package ar.com.hjg.pngj;
 
 /**
- * Simple immutable wrapper for basic image info
+ * Simple immutable wrapper for basic image info Some parameters are clearly
+ * redundant The constructor requires an 'ortogonal' subset
  */
 public class ImageInfo {
 
-	// some parameters are redundant. the constructor requires an 'ortogonal' subset
-	public final int cols; // width
-	public final int rows; // height
-	public final int bitDepth; // bits per sample in the scanline: this is  8/16 for RGB true color and grayscale; for indexed, number of bits per palette index (1 2 4 8)  
-	public final int bytesPixel; // in the scanline: channel * bitDepth/8 (ONLY MAKES SENSE FOR  bitDepth=8,16!!!!)
-	public final int samplesPerRow; // in the scanline: channel * bitDepth/8 (ONLY MAKES SENSE FOR  bitDepth=8,16!!!!)
-	public final int channels; // caution: used in the scanline: 3/4 for rgb/rgba, 1 for palette/gray
-	public final boolean alpha;
-	public final boolean greyscale;
-	public final boolean indexed; // pallette ?
-
-	private static final int MAX_COLS_ROWS_VAL = 100000; // ridicuous big values
+	/**
+	 * image width, in pixels
+	 */
+	public final int cols;
+	/**
+	 * image height, in pixels
+	 */
+	public final int rows;
+	/**
+	 * Bits per sample in the buffer This is 8-6 for RGB true color and
+	 * grayscale imags For indexed images, number of bits per palette index (1 2
+	 * 4 8)
+	 */
+	public final int bitDepth;
 
 	/**
-	 * constructor defaul: assumes truecolor!
+	 * Number of channels, used in the buffer (caution!) This is 3-4 for
+	 * rgb/rgba, but 1 for palette/gray !
+	 */
+	public final int channels;
+
+	/**
+	 * Bytes used for each pixel in the buffer equals channel * bitDepth/8 (ONLY
+	 * MAKES SENSE FOR bitDepth=8,16!!!!)
+	 */
+	public final int bytesPixel;
+	/**
+	 * Samples available for each scanline, in the buffer Equals cols x channels
+	 */
+	public final int samplesPerRow;
+
+	public final boolean alpha;
+	public final boolean greyscale;
+	public final boolean indexed;
+
+	private static final int MAX_COLS_ROWS_VAL = 100000; // ridicuous big value
+
+	/**
+	 * Constructor default: assumes RGB (truecolor)!
 	 */
 	public ImageInfo(int cols, int rows, int bitdepth, boolean alpha) {
 		this(cols, rows, bitdepth, alpha, false, false);
 	}
 
+	/**
+	 * Constructor
+	 * 
+	 * @param cols
+	 *            width in pixels
+	 * @param rows
+	 *            height in pixels
+	 * @param bitdepth
+	 *            Bits per sample, in the buffer : 8-16 for RGB true color and
+	 *            greyscale
+	 * @param alpha
+	 * @param grayscale
+	 * @param palette
+	 */
 	public ImageInfo(int cols, int rows, int bitdepth, boolean alpha, boolean grayscale, boolean palette) {
 		this.cols = cols;
 		this.rows = rows;
@@ -49,6 +88,7 @@ public class ImageInfo {
 		case 16:
 			if (this.indexed)
 				throw new PngjException("indexed can't have bitdepth=" + this.bitDepth);
+			break;
 		default:
 			throw new PngjException("invalid bitdepth=" + this.bitDepth);
 		}

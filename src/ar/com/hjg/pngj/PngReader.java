@@ -14,7 +14,7 @@ import java.util.zip.CRC32;
 import java.util.zip.InflaterInputStream;
 
 /**
- * PNG reader
+ * Reads a PNG image, line by line
  */
 public class PngReader {
 	public static final int FILTER_NONE = 0;
@@ -23,8 +23,8 @@ public class PngReader {
 	public static final int FILTER_AVERAGE = 3;
 	public static final int FILTER_PAETH = 4;
 
-	private final String filename;
 	public final ImageInfo imgInfo;
+	public final String filename;
 	private final InputStream is;
 	private final InflaterInputStream idatIstream;
 	private final PngIDatChunkInputStream iIdatCstream;
@@ -37,16 +37,20 @@ public class PngReader {
 	private List<PngChunk> chunks1 = new ArrayList<PngChunk>(); // pre idat
 	private List<PngChunk> chunks2 = new ArrayList<PngChunk>(); // post idat
 
-	private int rowNum = -1; // numero de linea leida (actual)
 	private final int bytesPerRow; // sin inlcuir byte de filtro
-	private final int valsPerRow; // escalares por fila = cols x channels
+	private final int valsPerRow; // smaples per row= cols x channels
 
+	private int rowNum = -1; // numero de linea leida (actual)
 	private ImageLine imgLine;
-	private int[] scanline = null; // link a imgLine.val . layout muy diferente a rowb!
 	private int[] rowb = null; // linea covnertida a byte; empieza en 1; (el 0 se usara para tipo de filtro)
 	private int[] rowbprev = null; // rowb previa
 	private byte[] rowbfilter = null; // linea actual filtrada
 
+	/**
+	 * The constructor loads the header and first chunks, 
+	 * stopping at the beginning of the image data (IDAT chunks)
+	 * @param filename   Path of image file
+	 */
 	public PngReader(String filename) {
 		this.filename = filename;
 		crcengine = new CRC32();
@@ -58,11 +62,13 @@ public class PngReader {
 		} catch (FileNotFoundException e) {
 			throw new PngjInputException("Can open file for reading (" + filename + ")");
 		}
+		// reads header (magic bytes)
 		byte[] pngid = new byte[PngHelper.pngIdBytes.length];
 		PngHelper.readBytes(is, pngid, 0, pngid.length);
 		offset += pngid.length;
 		if (!Arrays.equals(pngid, PngHelper.pngIdBytes))
 			throw new PngjInputException("Bad file id (" + filename + ")");
+		// reads first chunks
 		int clen = PngHelper.readInt4(is);
 		offset += 4;
 		if (clen != 13)
@@ -91,19 +97,17 @@ public class PngReader {
 		boolean alpha = (colormodel & 0x04) != 0;
 		boolean palette = (colormodel & 0x01) != 0;
 		boolean grayscale = (colormodel == 0 || colormodel == 4);
-
 		if (bitspc != 8 && bitspc != 16)
 			throw new RuntimeException("Bit depth not supported " + bitspc);
 		imgInfo = new ImageInfo(cols, rows, bitspc, alpha, grayscale, palette);
 		imgLine = new ImageLine(imgInfo);
-		// prealocamos
 		this.bytesPerRow = imgInfo.bytesPixel * imgInfo.cols;
 		this.valsPerRow = imgInfo.cols * imgInfo.channels;
-		scanline = imgLine.scanline;
+		// allocation
 		rowb = new int[bytesPerRow + 1];
 		rowbprev = new int[bytesPerRow + 1];
 		rowbfilter = new byte[bytesPerRow + 1];
-		int idatLen = readMiscChunks();
+		int idatLen = readFirstChunks();
 		if (idatLen < 0)
 			throw new PngjInputException("first idat chunk not found!");
 		iIdatCstream = new PngIDatChunkInputStream(is, idatLen, offset);
@@ -137,7 +141,7 @@ public class PngReader {
 	 * largo del primer chunk IDAT encontrado. Queda posicionado despues del
 	 * IDAT id
 	 * */
-	private int readMiscChunks() {
+	private int readFirstChunks() {
 		int clen = 0;
 		boolean found = false;
 		while (!found) {
@@ -151,17 +155,13 @@ public class PngReader {
 			if (Arrays.equals(chunkid, PngHelper.IDAT)) {
 				found = true;
 				break;
-			} else if (Arrays.equals(chunkid, PngHelper.IEND)) { // anomalia:
-				// nodeberia
-				// encontrar
-				// END aca
-				break;
+			} else if (Arrays.equals(chunkid, PngHelper.IEND)) { 
+				break; //?? 
 			}
 			PngChunk chunk = new PngChunk(clen, chunkid, crcengine);
 			chunk.readChunk(is);
 			offset += chunk.len + 4;
 			addChunkToList(chunk, chunks1, true);
-			// hacemos algo con los chunks??
 		}
 		return found ? clen : -1;
 	}
@@ -202,15 +202,34 @@ public class PngReader {
 		PngHelper.logdebug("end chunk found ok offset=" + offset);
 	}
 
+	
 	/** 
-	 * 
+	 * calls readRow(int[] buffer, int nrow),  usin LineImage as buffer
+	 * @return 
 	 */
 	public ImageLine readRow(int nrow) {
+		readRow(imgLine.scanline,nrow);
+		imgLine.incRown();
+		return imgLine;
+	}
+	
+	/**
+	 * Reads a line and returns it as a int array
+	 * Buffer can be prealocated (in this case it must have enough len!)
+	 * or can be null
+	 * See also the other overloaded method
+	 * @param buffer  
+	 * @param nrow
+	 * @return  The same buffer if it was allocated, a newly allocated one otherwise
+	 */
+	public int[] readRow(int[] buffer, int nrow) {
 		if (nrow < 0 || nrow >= imgInfo.rows)
 			throw new PngjInputException("invalid line");
 		if (nrow != rowNum + 1)
 			throw new PngjInputException("invalid line (expected: " + (rowNum + 1));
 		rowNum++;
+		if(buffer==null)
+			buffer = new int[valsPerRow];
 		// swap
 		int[] tmp = rowb;
 		rowb = rowbprev;
@@ -219,21 +238,22 @@ public class PngReader {
 		PngHelper.readBytes(idatIstream, rowbfilter, 0, bytesPerRow + 1);
 		rowb[0] = rowbfilter[0];
 		unfilterRow();
-		convertRowFromBytes();
-		imgLine.rown = nrow;
-		return imgLine;
+		convertRowFromBytes(buffer);
+		return buffer;
 	}
 
-	private void convertRowFromBytes() {
+
+
+	private void convertRowFromBytes(int[] buffer) {
 		// http://www.libpng.org/pub/png/spec/1.2/PNG-DataRep.html
 		int i, j;
 		if (imgInfo.bitDepth == 8) {
 			for (i = 0, j = 1; i < valsPerRow; i++) {
-				scanline[i] = (rowb[j++]);
+				buffer[i] = (rowb[j++]);
 			}
 		} else { // 16 bitspc
 			for (i = 0, j = 1; i < valsPerRow; i++) {
-				scanline[i] = (rowb[j++] << 8) + rowb[j++];
+				buffer[i] = (rowb[j++] << 8) + rowb[j++];
 			}
 		}
 	}
@@ -301,7 +321,7 @@ public class PngReader {
 	}
 
 	/**
-	 * esto deberia llamarse despues de haber consumido el ultimo idat
+	 * This should be called after having read the last line.
 	 */
 	public void end() {
 		offset = (int) iIdatCstream.getOffset();
@@ -317,10 +337,16 @@ public class PngReader {
 		}
 	}
 
+	/**
+	 * Get first chunks (before IDAT)
+	 */
 	public List<PngChunk> getChunks1() {
 		return chunks1;
 	}
 
+	/**
+	 * Get last chunks (after IDAT)
+	 */
 	public List<PngChunk> getChunks2() {
 		return chunks2;
 	}
@@ -343,7 +369,7 @@ public class PngReader {
 	public static void showLineInfo(ImageLine line) {
 		System.out.println(line);
 		System.out.println(line.computeStats());
-		System.out.println(line.infoPixelsExtremos());
+		System.out.println(line.infoFirstLastPixels());
 	}
 
 	public static void main(String[] args) {
@@ -351,9 +377,9 @@ public class PngReader {
 		PngReader png = new PngReader("resources/test8.png");
 		System.out.println(png);
 		for (int i = 0; i < png.imgInfo.rows; i++) {
-			ImageLine line = png.readRow(i);
+			png.readRow(i);
 			if (i % 50 == 0)
-				showLineInfo(line);
+				showLineInfo(png.imgLine);
 		}
 
 		png.end();

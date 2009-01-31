@@ -68,7 +68,7 @@ public class PngIDatChunkInputStream extends InputStream {
 			ended = !Arrays.equals(idLastChunk, PngHelper.IDAT);
 			if (!ended)
 				crcEngine.update(idLastChunk, 0, 4);
-			PngHelper.logdebug("IdatChunkEnded. Next chunk len= " + lenLastChunk + " idat?" + (!ended));
+			//PngHelper.logdebug("IdatChunkEnded. Next chunk len= " + lenLastChunk + " idat?" + (!ended));
 		} while (lenLastChunk == 0 && !ended); // muy raro que el while se
 		// cumpla (IDAT vacio??)
 	}

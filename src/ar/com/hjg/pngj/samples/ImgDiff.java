@@ -4,7 +4,10 @@ import ar.com.hjg.pngj.ImageLine;
 import ar.com.hjg.pngj.PngReader;
 
 /**
- * given two images, hopely identical, computes the maximum difference
+ * Utility (and example) to verify that two images are identical.
+ * Computes the maximum difference. 
+ * 
+ * TODO: Add alpha
  */
 public class ImgDiff {
 
@@ -15,7 +18,7 @@ public class ImgDiff {
 	 * 
 	 * ignores alpha
 	 */
-	public static int[] computeDiffLine(ImageLine l1, ImageLine l2) {
+	private static int[] computeDiffLine(ImageLine l1, ImageLine l2) {
 		double maxDif = -1;
 		int maxDifCol = -1;
 		double dif;

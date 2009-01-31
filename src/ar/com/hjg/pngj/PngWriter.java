@@ -10,6 +10,9 @@ import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
+/**
+ * For writing a PNG image
+ */
 public class PngWriter {
 
 	public static final int FILTER_NONE = 0;
@@ -18,17 +21,17 @@ public class PngWriter {
 	public static final int FILTER_AVERAGE = 3;
 	public static final int FILTER_PAETH = 4;
 
-	private final String filename; // puede ser null
-	private boolean overwrite = false; // if file already exists,
+	private final String filename; 
+	private boolean overwrite = false; 
 
 	public final ImageInfo imgInfo;
 
 	private final int valsPerRow; // cols * channels
 	private final int bytesPerRow; // en png. sin incluir el byte de tipo de filtrado !
 	private int compLevel = 6; // 0 - 9
-	private int filterType = FILTER_SUB;
+	private int filterType = FILTER_PAETH;
 	private Double dpi = null; // dots per inch
-	private PngTxtInfo txtInfo = new PngTxtInfo(); // optional!
+	private PngTxtInfo txtInfo = new PngTxtInfo(); // for new textual text chunks, optional!
 
 	private boolean initialized = false;
 	private final CRC32 crcEngine;
@@ -92,8 +95,9 @@ public class PngWriter {
 
 	/**
 	 * To be called after setting parameters and before writing lines. If not
-	 * called explicityly will be called implicitly. Si se le pasa un pngreader,
-	 * copia los ancillary chunks leidos en este
+	 * called explicityly will be called implicitly. 
+	 * 
+	 * @param reader  Optional. If not null, pallette and some ancillary chunks will be copied.
 	 * 
 	 * TODO: mejorar tratamiento de chunks, como palette.
 	 * http://www.w3.org/TR/PNG/#table53
@@ -188,7 +192,7 @@ public class PngWriter {
 
 	/**
 	 * Writes a full image row. This must be called sequentially from n=0 to
-	 * n=rows-1 The values are floating point, in the natural order: R G B R G B
+	 * n=rows-1 One integer per sample , in the natural order: R G B R G B
 	 * ... (or R G B A R G B A... if has alpha) The values should be between 0
 	 * and 255 for 8 bitspc images, and between 0- 65535 form 16 bitspc images
 	 * (this applies also to the alpha channel if present) The array can be
@@ -225,7 +229,7 @@ public class PngWriter {
 	 * this uses the row number from the imageline!
 	 */
 	public void writeRow(ImageLine imgline) {
-		writeRow(imgline.scanline, imgline.rown);
+		writeRow(imgline.scanline, imgline.getRown());
 	}
 
 	/**
@@ -350,15 +354,16 @@ public class PngWriter {
 	}
 
 	/**
-	 * Set physical resolution, in DPI (dots per inch) Only informative
+	 * Set physical resolution, in DPI (dots per inch) optional, only informative
 	 */
 	public void setDpi(Double dpi) {
 		this.dpi = dpi;
 	}
 
 	/**
-	 * Sets filter type: the recommend is the default FILTER_SUB If the filter
+	 * Sets filter type: the recommend is the default FILTER_PAETH If the filter
 	 * is not implemented an excpetion will be thrown when writing the image.
+	 * Can be changed for each line.
 	 */
 	public void setFilterType(int filterType) {
 		if (filterType < 0 || filterType > 4)
@@ -371,7 +376,7 @@ public class PngWriter {
 	}
 
 	/**
-	 * compression level: between 0 and 9
+	 * compression level: between 0 and 9 (default:6)
 	 */
 	public void setCompLevel(int compLevel) {
 		if (compLevel < 0 || compLevel > 9)

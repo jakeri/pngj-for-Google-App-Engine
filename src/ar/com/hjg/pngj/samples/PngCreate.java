@@ -25,7 +25,7 @@ public class PngCreate {
 		int channels = png.imgInfo.channels;
 		int valuesPerRow = png.imgInfo.samplesPerRow;
 		ImageLine iline = new ImageLine(png.imgInfo);
-		iline.rown = 0;
+		iline.setRown(0);
 		iline.setValD(0, 1.0);
 		iline.setValD(1, 1.0); // primer columna amarilla
 		iline.setValD(2, 0.0);
@@ -42,7 +42,7 @@ public class PngCreate {
 		if (alpha)
 			addAlpha(iline);
 		png.writeRow(iline);
-		iline.rown++;
+		iline.incRown();
 
 		for (int j = 1; j < cols - 1; j++) { // segunda fila: negra
 			iline.setValD(j * channels, 0.0);
@@ -52,14 +52,14 @@ public class PngCreate {
 		if (alpha)
 			addAlpha(iline);
 		png.writeRow(iline);
-		iline.rown++;
+		iline.incRown();
 
-		for (; iline.rown < rows; iline.rown++) {
+		for (; iline.getRown()< rows; iline.incRown()) {
 			for (int j = 1; j < cols - 1; j++) {
 				iline.setValD(j * channels, clamp((2 * j / cols) - 0.3, 0, 1.0));
-				iline.setValD(j * channels + 1, clamp((2 * iline.rown / rows) - 0.4, 0, 1.0));
+				iline.setValD(j * channels + 1, clamp((2 * iline.getRown()/ rows) - 0.4, 0, 1.0));
 				iline.setValD(j * channels + 2,
-						clamp((0.55 * Math.sin(13.0 * iline.rown / rows + j * 25.0 / cols) + 0.5), 0, 1.0));
+						clamp((0.55 * Math.sin(13.0 * iline.getRown() / rows + j * 25.0 / cols) + 0.5), 0, 1.0));
 			}
 			if (alpha)
 				addAlpha(iline);
@@ -72,11 +72,11 @@ public class PngCreate {
 		int rows = iline.imgInfo.rows;
 		for (int i = 0; i < iline.imgInfo.cols; i++) {
 			double alpha;
-			if (i == 0 || i == iline.imgInfo.cols - 1 || iline.rown < 2)
+			if (i == 0 || i == iline.imgInfo.cols - 1 || iline.getRown()< 2)
 				alpha = 1.0;
 			else {
 				// opaco arriba a la derecha, transparente abajo izquierda
-				double d = Math.sqrt(((0.5 * i) / cols + 0.0) + ((0.5 * (rows - iline.rown)) / rows + 0.0)); // entre 0 y 1
+				double d = Math.sqrt(((0.5 * i) / cols + 0.0) + ((0.5 * (rows - iline.getRown())) / rows + 0.0)); // entre 0 y 1
 				d = d * 1.3 - 0.2;
 				alpha = clamp(d, 0.0, 1.0);
 			}
