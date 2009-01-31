@@ -2,6 +2,7 @@ package ar.com.hjg.pngj;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -45,6 +46,7 @@ public class PngReader {
 	private int[] rowb = null; // linea covnertida a byte; empieza en 1; (el 0 se usara para tipo de filtro)
 	private int[] rowbprev = null; // rowb previa
 	private byte[] rowbfilter = null; // linea actual filtrada
+	private double dpi=0.0; 
 
 	/**
 	 * The constructor loads the header and first chunks, 
@@ -56,7 +58,7 @@ public class PngReader {
 		crcengine = new CRC32();
 		File file = new File(filename);
 		if (!file.exists() || !file.canRead())
-			throw new PngjInputException("Can open file for reading (" + filename + ")");
+			throw new PngjInputException("Can open file for reading (" + filename + ") [" + file.getAbsolutePath() +"]");
 		try {
 			is = new BufferedInputStream(new FileInputStream(file));
 		} catch (FileNotFoundException e) {
@@ -120,6 +122,16 @@ public class PngReader {
 	 */
 	private boolean addChunkToList(PngChunk chunk, List<PngChunk> list, boolean includedata) {
 		boolean overflow = false;
+		// procesamiento extra para ciertos chunks
+		if( chunk.id.equals(PngHelper.IPHYS_TEXT)) {
+			ByteArrayInputStream b= chunk.getAsByteStream();
+			int resx= PngHelper.readInt4(b);
+			int resy= PngHelper.readInt4(b);
+			int mode = PngHelper.readByte(b); // 1: meters
+			if(mode==1 & resx==resy) 
+				this.dpi = resx * 2.54/100.0; 
+		}	
+		//// prosamiento comun
 		if (includedata && bytesChunksLoaded + chunk.len > MAX_BYTES_CHUNKS_TO_LOAD) {
 			overflow = true;
 			includedata = false;
@@ -205,7 +217,7 @@ public class PngReader {
 	
 	/** 
 	 * calls readRow(int[] buffer, int nrow),  usin LineImage as buffer
-	 * @return 
+	 * @return the ImageLine that also is available inside this object
 	 */
 	public ImageLine readRow(int nrow) {
 		readRow(imgLine.scanline,nrow);
@@ -349,6 +361,16 @@ public class PngReader {
 	 */
 	public List<PngChunk> getChunks2() {
 		return chunks2;
+	}
+
+	public double getDpi() {
+		return dpi;
+	}
+	/**
+	 * dots per centimeter
+	 */
+	public double getDpcm() {
+		return dpi/2.54;
 	}
 
 	public void showChunks() {

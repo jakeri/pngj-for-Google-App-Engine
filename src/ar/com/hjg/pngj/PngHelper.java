@@ -24,7 +24,7 @@ public class PngHelper {
 	public static final byte[] ITEXT = ITEXT_TEXT.getBytes();
 	public static final byte[] IPHYS = IPHYS_TEXT.getBytes();
 
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 
 	public static void writeInt2(OutputStream os, int n) {
 		byte[] temp = { (byte) ((n >> 8) & 0xff), (byte) (n & 0xff) };

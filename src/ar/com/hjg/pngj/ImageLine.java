@@ -139,6 +139,23 @@ public class ImageLine {
 		return (scanline[offset+3]<<24) + (scanline[offset]<<16) + (scanline[offset+1]<<8) + (scanline[offset+2]);
 	}
 
+	/**
+	 * 
+	 **/
+	public void setPixelsRGB8(int[] packed) {
+		for(int i=0;i<imgInfo.cols;i++) {
+			scanline[i*channels]  =  ((packed[i]&0xFF0000)>>16);
+			scanline[i*channels+1] = ((packed[i]&0xFF00)>>8);
+			scanline[i*channels+2] = ((packed[i]&0xFF));
+		}
+	}
+
+	public void setPixelRGB8(int col,int packed) {
+			scanline[col*channels]  =  ((packed&0xFF0000)>>16);
+			scanline[col*channels+1] = ((packed&0xFF00)>>8);
+			scanline[col*channels+2] = ((packed&0xFF));
+	}
+
 	public void setValD(int i, double d) {
 		scanline[i] = double2int(d);
 	}

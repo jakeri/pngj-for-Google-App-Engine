@@ -102,7 +102,7 @@ public class PngWriter {
 	 * TODO: mejorar tratamiento de chunks, como palette.
 	 * http://www.w3.org/TR/PNG/#table53
 	 */
-	public void doInit(PngReader reader) {
+	public void prepare(PngReader reader) {
 		if (initialized)
 			return;
 		File f = new File(filename);
@@ -136,7 +136,7 @@ public class PngWriter {
 	}
 
 	public void doInit() {
-		doInit(null);
+		prepare(null);
 	}
 
 	/**

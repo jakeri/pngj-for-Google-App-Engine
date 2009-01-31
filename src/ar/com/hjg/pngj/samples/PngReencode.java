@@ -18,7 +18,7 @@ public class PngReencode {
 		pngw.setFilterType(filter);
 		pngw.setCompLevel(cLevel);
 
-		pngw.doInit(pngr); // not necesary; but this can copy some informational chunks from original 
+		pngw.prepare(pngr); // not necesary; but this can copy some informational chunks from original 
 
 		System.out.printf("Creating Image %s  filter=%d compLevel=%d \n", pngw.getFilename(), filter, cLevel);
 
