@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="javadoc">
+    <target name="javadoc">
+        <javadoc  access="public" author="false" classpath="." destdir="../doc/api" doctitle="PNGJ: Java library for PNG image IO" nodeprecated="true" nodeprecatedlist="true" noindex="false" nonavbar="false" notree="false" overview="../doc/overview.html" packagenames="ar.com.hjg.pngj.samples,ar.com.hjg.pngj" source="1.6" sourcepath="../src" splitindex="true" use="true" version="false"/>
+    </target>
+</project>
