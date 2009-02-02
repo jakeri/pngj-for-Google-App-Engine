@@ -1,0 +1,28 @@
+			 PNGJ  Version 0.1
+			   Release Notes
+
+
+INTRODUCTION:
+
+PNGJ is a simple Java library for reading and writing PNG images.
+See docs and examples attached.
+
+
+Version 0.1  (January 2009)
+-----------------------
+- Full reading/writing capabilities for truecolor formats: RGB/RGBA , 8 and 16 bpp
+- Other formats: paletted and grayscale images implemented (almost no testing), 
+only with 8bitdepth resolution (1,2,4 bits not implemented). 
+- Palette handling: very rudimentary: PngReader only reads the raw chunk and 
+PngWriter -if applicable- writes it back.
+- Special color transformations (ICC) : unvisible for the API. The chunks are
+read and write 'raw'. 
+- Special chunks: limited support for Physical resolution (DPI) and textual chunks.
+All other ancillary chunks are blindly read and write.
+
+
+Feedback
+--------
+http://code.google.com/p/pngj
+hgonzalez@gmail.com
+Hernán J. González
