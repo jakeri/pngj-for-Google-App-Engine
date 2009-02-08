@@ -46,5 +46,6 @@
 			includes="pngj-${version.num}/"
 			compression="gzip">
 		</tar>
+		<delete dir="${versiondir}" />
 	</target>
 </project>

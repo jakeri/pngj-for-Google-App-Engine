@@ -74,6 +74,20 @@ public class PngIDatChunkInputStream extends InputStream {
 	}
 
 	/**
+	 * en algunos casos la lectura de la ultima fila no consume el chunk. 
+	 * en esos casos hay que hacer una lectura dummy de los bytes que quedan
+	 */
+	public void forceChunkEnd() {
+		if(!ended) {
+			byte[] dummy = new byte[toReadThisChunk];
+			PngHelper.readBytes(inputStream, dummy, 0, toReadThisChunk);
+			crcEngine.update(dummy, 0, toReadThisChunk);
+			endChunkGoForNext();
+		}
+	}
+
+	
+	/**
 	 * puede devolver menos que len. pero nunca 0 -1 significa que termino
 	 * "pseudo archivo" prematuramente. notar que eso es un error en nuestro
 	 * caso

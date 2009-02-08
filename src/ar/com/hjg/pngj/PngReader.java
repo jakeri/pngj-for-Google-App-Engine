@@ -2,7 +2,6 @@ package ar.com.hjg.pngj;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -183,7 +182,9 @@ public class PngReader {
 	 * 
 	 * */
 	private void readLastChunks() {
-		PngHelper.logdebug("idat ended? " + iIdatCstream.isEnded());
+		//PngHelper.logdebug("idat ended? " + iIdatCstream.isEnded());
+		if(!iIdatCstream.isEnded() )
+			iIdatCstream.forceChunkEnd();
 		int clen = iIdatCstream.getLenLastChunk();
 		byte[] chunkid = iIdatCstream.getIdLastChunk();
 		boolean endfound = false;
@@ -394,16 +395,20 @@ public class PngReader {
 		System.out.println(line.infoFirstLastPixels());
 	}
 
+	/**
+	 * juste a check/sample 
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		Locale.setDefault(Locale.US);
-		PngReader png = new PngReader("resources/test8.png");
+		PngReader png = new PngReader(args[0]);
 		System.out.println(png);
+		int each = png.imgInfo.rows/7;
 		for (int i = 0; i < png.imgInfo.rows; i++) {
 			png.readRow(i);
-			if (i % 50 == 0)
+			if (i % each == 0 || i== png.imgInfo.rows-1)
 				showLineInfo(png.imgLine);
 		}
-
 		png.end();
 		png.showChunks();
 	}
