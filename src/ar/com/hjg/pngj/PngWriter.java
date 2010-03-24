@@ -21,7 +21,7 @@ public class PngWriter {
 	public static final int FILTER_AVERAGE = 3;
 	public static final int FILTER_PAETH = 4;
 
-	private final String filename; 
+	private String filename; 
 	private boolean overwrite = false; 
 
 	public final ImageInfo imgInfo;
@@ -79,6 +79,20 @@ public class PngWriter {
 
 	}
 
+    public PngWriter(OutputStream outputStream, ImageInfo imgInfo) {
+        this.os = outputStream;
+        this.imgInfo = imgInfo;
+        this.bytesPerRow = imgInfo.cols * imgInfo.bytesPixel;
+        this.valsPerRow = imgInfo.cols * imgInfo.channels;
+
+        crcEngine = new CRC32();
+        // prealocamos
+        scanline = new int[valsPerRow];
+        rowb = new int[bytesPerRow + 1];
+        rowbprev = new int[bytesPerRow + 1];
+        rowbfilter = new byte[bytesPerRow + 1];
+    }
+
 	public PngWriter(String filename, ImageInfo imgInfo) {
 		this.filename = filename;
 		this.imgInfo = imgInfo;
@@ -105,14 +119,16 @@ public class PngWriter {
 	public void prepare(PngReader reader) {
 		if (initialized)
 			return;
-		File f = new File(filename);
-		if (f.exists() && !overwrite)
-			throw new PngjException("File exists (and overwrite=false) " + filename);
-		try {
-			this.os = new FileOutputStream(f);
-		} catch (FileNotFoundException e) {
-			throw new PngjOutputException("error opening " + filename + " for writing", e);
-		}
+		if(this.os == null) {
+            File f = new File(filename);
+            if (f.exists() && !overwrite)
+                throw new PngjException("File exists (and overwrite=false) " + filename);
+            try {
+                this.os = new FileOutputStream(f);
+            } catch (FileNotFoundException e) {
+                throw new PngjOutputException("error opening " + filename + " for writing", e);
+            }
+        }
 		datStream = new PngIDatChunkOutputStream(this.os, 8192);
 		datStreamDeflated = new DeflaterOutputStream(datStream, new Deflater(compLevel));
 		writeHeader();
