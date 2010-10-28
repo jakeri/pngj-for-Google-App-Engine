@@ -10,7 +10,7 @@ import ar.com.hjg.pngj.PngWriter;
 public class DecreaseRed {
 
 	public static void decreaseRed(String origFilename, String destFilename) {
-		PngReader pngr = new PngReader(origFilename);
+		PngReader pngr = new PngReader(PngReader.fileToStream(origFilename));
 		PngWriter pngw = new PngWriter(destFilename, pngr.imgInfo);
 		pngw.setOverrideFile(true);  // allows to override writen file if it already exits
 		System.out.println(pngr.toString());

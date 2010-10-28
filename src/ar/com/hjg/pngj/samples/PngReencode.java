@@ -10,7 +10,7 @@ import ar.com.hjg.pngj.PngWriter;
 public class PngReencode {
 
 	public static void reencode(String orig, String dest, int filter, int cLevel) {
-		PngReader pngr = new PngReader(orig);
+		PngReader pngr = new PngReader(PngReader.fileToStream(orig));
 		PngWriter pngw = new PngWriter(dest, pngr.imgInfo);
 		pngw.setOverrideFile(true);
 		System.out.println(pngr.toString());

@@ -42,8 +42,8 @@ public class ImgDiff {
 		int maxDifCol = -1;
 		int maxDifRow = -1;
 
-		PngReader i1 = new PngReader(f1);
-		PngReader i2 = new PngReader(f2);
+		PngReader i1 = new PngReader(PngReader.fileToStream(f1));
+		PngReader i2 = new PngReader(PngReader.fileToStream(f2));
 		System.out.println(i1.toString());
 		System.out.println(i2.toString());
 

@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.zip.CRC32;
 import java.util.zip.InflaterInputStream;
 
@@ -24,7 +23,7 @@ public class PngReader {
 	public static final int FILTER_PAETH = 4;
 
 	public final ImageInfo imgInfo;
-	public final String filename;
+	//public final String filename;
 	private final InputStream is;
 	private final InflaterInputStream idatIstream;
 	private final PngIDatChunkInputStream iIdatCstream;
@@ -52,23 +51,17 @@ public class PngReader {
 	 * stopping at the beginning of the image data (IDAT chunks)
 	 * @param filename   Path of image file
 	 */
-	public PngReader(String filename) {
-		this.filename = filename;
+	public PngReader(InputStream inputs) {
+
+		this.is = inputs;
 		crcengine = new CRC32();
-		File file = new File(filename);
-		if (!file.exists() || !file.canRead())
-			throw new PngjInputException("Can open file for reading (" + filename + ") [" + file.getAbsolutePath() +"]");
-		try {
-			is = new BufferedInputStream(new FileInputStream(file));
-		} catch (FileNotFoundException e) {
-			throw new PngjInputException("Can open file for reading (" + filename + ")");
-		}
+
 		// reads header (magic bytes)
 		byte[] pngid = new byte[PngHelper.pngIdBytes.length];
 		PngHelper.readBytes(is, pngid, 0, pngid.length);
 		offset += pngid.length;
 		if (!Arrays.equals(pngid, PngHelper.pngIdBytes))
-			throw new PngjInputException("Bad file id (" + filename + ")");
+			throw new PngjInputException("Bad data");
 		// reads first chunks
 		int clen = PngHelper.readInt4(is);
 		offset += 4;
@@ -384,9 +377,6 @@ public class PngReader {
 		}
 	}
 
-	public String toString() { // info basica
-		return "filename=" + filename + " " + imgInfo.toString();
-	}
 
 	/** para debug */
 	public static void showLineInfo(ImageLine line) {
@@ -395,21 +385,18 @@ public class PngReader {
 		System.out.println(line.infoFirstLastPixels());
 	}
 
-	/**
-	 * juste a check/sample 
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		Locale.setDefault(Locale.US);
-		PngReader png = new PngReader(args[0]);
-		System.out.println(png);
-		int each = png.imgInfo.rows/7;
-		for (int i = 0; i < png.imgInfo.rows; i++) {
-			png.readRow(i);
-			if (i % each == 0 || i== png.imgInfo.rows-1)
-				showLineInfo(png.imgLine);
+	
+	public static InputStream fileToStream(String filename) {
+		File file = new File(filename);
+		if (!file.exists() || !file.canRead())
+			throw new PngjInputException("Can open file for reading (" + filename + ") [" + file.getAbsolutePath() +"]");
+		try {
+			 return new BufferedInputStream(new FileInputStream(file));
+		} catch (FileNotFoundException e) {
+			throw new PngjInputException("Can open file for reading (" + filename + ")");
 		}
-		png.end();
-		png.showChunks();
 	}
+	
+	
+	
 }
